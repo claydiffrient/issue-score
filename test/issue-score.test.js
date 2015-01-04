@@ -6,6 +6,8 @@ var sinon = require('sinon');
 
 describe('Issue Score', function () {
 
+  it('should authenticate')
+
   it('should initialize when given a repository string', function () {
     var issueSkore = issueScore('claydiffrient/classroom-questions');
     expect(issueSkore.apiUrl).to.be('https://api.github.com/repos/claydiffrient/classroom-questions/issues/events?per_page=100');
