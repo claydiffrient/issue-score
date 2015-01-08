@@ -8,6 +8,9 @@
   "bin": {
     "issue-score": "bin/cli.js"
   },
+  "scripts": {
+    "test": "mocha -R spec -G -u bdd ./test/issue-score.test.js"
+  },
   "preferGlobal": true,
   "repository": {
     "type": "git",
