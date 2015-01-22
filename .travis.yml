@@ -3,3 +3,11 @@ node_js:
   - "0.11"
   - "0.10"
   - "0.8"
+script:
+  - "npm run coverage"
+  - "npm test"
+addons:
+  code_climate:
+    repo_token: 4485f5a28135d786d91434fd8cc7f4eb6578e6a51a16682cbb8098487ceaaae5
+after_script:
+  - cat ./coverage/lcov.info | codeclimate
