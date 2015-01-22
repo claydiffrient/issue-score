@@ -44,13 +44,36 @@ describe('Issue Score', function () {
   });
 
 
-  xdescribe('calculate', function () {
+  describe('calculate', function () {
+
+    var issueData = [{
+      actor: {
+        login: 'testUser'
+      },
+      event: 'closed'
+    },{
+      actor: {
+        login: 'testUser'
+      },
+      event: 'labeled'
+    }];
+
     it('should calculate the issue scores given repository data', function () {
-      var issueScore = issueScore('test/repo');
-      //TODO: Add mock data here.
-      var data = {};
-      var scoreTable = issueScore.calculate(data)
-      expect(scoreTable).to.be.ok();
+      var issueScore = new IssueScore('test/repo');
+      var fetchStub = sinon.stub(issueScore, 'fetch', function (callback) {
+        this.issueEvents = issueData;
+        callback();
+      });
+
+
+      issueScore.fetch(function () {
+        var scoreTable = issueScore.calculate();
+        expect(scoreTable).to.be.ok();
+        expect(scoreTable[0].testUser).to.eql([105, 1, 1]);
+        expect(scoreTable.options.head).to.eql(['', 'Issue Score', 'closed', 'labeled'])
+      });
+
+
     })
   })
 

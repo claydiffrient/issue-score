@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var argv = require('minimist')(process.argv.slice(2));
-var issueScore = require('../lib/issue-score');
+var IssueScore = require('../lib/issueScoreRedux');
 
 if (argv._.length != 1) {
   console.log("Usage: issue-score {user/org}/{repository}");
@@ -9,7 +9,11 @@ if (argv._.length != 1) {
 }
 
 try {
-  issueScore(argv._[0]);
+  issueScore = new IssueScore(argv._[0]);
+  issueScore.fetch(function () {
+    console.log(issueScore.issueEvents);
+  });
+
 } catch (err) {
   console.log("ERROR: " + err.message)
   process.exit(1);
