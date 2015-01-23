@@ -6,6 +6,18 @@ var sinon = require('sinon');
 
 describe('Issue Score', function () {
 
+  var issueData = [{
+    actor: {
+      login: 'testUser'
+    },
+    event: 'closed'
+  },{
+    actor: {
+      login: 'testUser'
+    },
+    event: 'labeled'
+  }];
+
   describe('Constructor', function () {
     it('should throw an error if not given a properly formatted repo', function () {
       expect(function () {IssueScore('notright')}).to.throwError();
@@ -45,19 +57,6 @@ describe('Issue Score', function () {
 
 
   describe('calculate', function () {
-
-    var issueData = [{
-      actor: {
-        login: 'testUser'
-      },
-      event: 'closed'
-    },{
-      actor: {
-        login: 'testUser'
-      },
-      event: 'labeled'
-    }];
-
     it('should calculate the issue scores given repository data', function () {
       var issueScore = new IssueScore('test/repo');
       var fetchStub = sinon.stub(issueScore, 'fetch', function (callback) {
@@ -72,9 +71,53 @@ describe('Issue Score', function () {
         expect(scoreTable[0].testUser).to.eql([105, 1, 1]);
         expect(scoreTable.options.head).to.eql(['', 'Issue Score', 'closed', 'labeled'])
       });
+    });
+  });
 
+  describe('fetch', function () {
+    it('should throw an error if GitHub has issues', function () {
+      var issueScore = new IssueScore('test/repo');
+      var ghRepoStub = sinon.stub(issueScore.github.events, 'getFromRepoIssues').yields(true, null);
+      expect(function () {
+        issueScore.fetch({}, function (err, data){});
+      }).to.throwError();
+    });
 
-    })
+    it('should get issues from github and add them to the data array', function () {
+      var singleIssueArray = [{
+        actor: {
+          login: 'testUser2'
+        },
+        event: 'labeled'
+      }];
+      issueData.meta = singleIssueArray.meta = {
+        link: '<https://nextUrl>; rel="next", <https://lastUrl>; rel="last"'
+      };
+      var issueScore = new IssueScore('test/repo');
+      var ghRepoStub = sinon.stub(issueScore.github.events, 'getFromRepoIssues').yields(null, issueData);
+      var ghHasNextStub = sinon.stub(issueScore.github, 'hasNextPage')
+      ghHasNextStub.onCall(0).returns(true);
+      ghHasNextStub.onCall(1).returns(false);
+      var ghGetNextPageStub = sinon.stub(issueScore.github, 'getNextPage');
+      // ghGetNextPageStub.onCall(0).yields(null, issueData);
+      ghGetNextPageStub.onCall(0).yields(null, singleIssueArray);
+
+      issueScore.fetch(function () {
+        expect(issueScore.issueEvents).to.eql(issueData.concat(singleIssueArray));
+      });
+    });
   })
 
 });
+
+
+
+[ { actor: { login: 'testUser' }, event: 'closed' },
+  { actor: { login: 'testUser' }, event: 'labeled' },
+  { actor: { login: 'testUser' }, event: 'closed' },
+  { actor: { login: 'testUser' }, event: 'labeled' } ]
+
+
+[ { actor: { login: 'testUser' }, event: 'closed' },
+  { actor: { login: 'testUser' }, event: 'labeled' },
+  { actor: { login: 'testUser2' }, event: 'labeled' } ]
