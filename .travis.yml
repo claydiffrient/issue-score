@@ -4,6 +4,7 @@ node_js:
   - "0.10"
   - "0.8"
 script:
+  - "npm lint"
   - "npm run coverage"
   - "npm test"
 addons:

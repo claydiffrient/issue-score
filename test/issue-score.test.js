@@ -1,6 +1,9 @@
-"use strict";
+// Not worried about too long of lines in this file.
+/* jshint -W101 */
 
-var IssueScore = require('../lib/issueScoreRedux.js');
+'use strict';
+
+var IssueScore = require('../lib/issue-score.js');
 var expect = require('expect.js');
 var sinon = require('sinon');
 
@@ -20,31 +23,31 @@ describe('Issue Score', function () {
 
   describe('Constructor', function () {
     it('should throw an error if not given a properly formatted repo', function () {
-      expect(function () {IssueScore('notright')}).to.throwError();
+      expect(function () {new IssueScore('notright');}).to.throwError();
     });
 
     it('should throw an error if called with only the first part of the repo', function () {
-      expect(function () {IssueScore('notokayeither/')}).to.throwError();
+      expect(function () {new IssueScore('notokayeither/');}).to.throwError();
     });
 
     it('should throw an error if called with only the last part of the repo', function () {
-      expect(function () {IssueScore('/notokayeither')}).to.throwError();
+      expect(function () {new IssueScore('/notokayeither');}).to.throwError();
     });
 
     it('should throw an error if called with no arguments', function () {
-      expect(function () {IssueScore()}).to.throwError();
+      expect(function () {new IssueScore();}).to.throwError();
     });
 
     it('should throw an error if called with a blank string', function () {
-      expect(function () {IssueScore('')}).to.throwError();
+      expect(function () {new IssueScore('');}).to.throwError();
     });
 
     it('should throw an error if called with a whitespace string', function () {
-      expect(function () {IssueScore('      ')}).to.throwError();
+      expect(function () {new IssueScore('      ');}).to.throwError();
     });
 
     it('should not throw an error when given a proper repository', function () {
-      expect(function () {IssueScore('test/repo')}).to.not.throwError();
+      expect(function () {new IssueScore('test/repo');}).to.not.throwError();
     });
 
     it('should properly split the repository string', function () {
@@ -52,7 +55,7 @@ describe('Issue Score', function () {
       expect(issueScore.repository).to.be.ok();
       expect(issueScore.repository.user).to.be('testing');
       expect(issueScore.repository.repo).to.be('special');
-    })
+    });
   });
 
 
@@ -69,13 +72,13 @@ describe('Issue Score', function () {
         var scoreTable = issueScore.calculate();
         expect(scoreTable).to.be.ok();
         expect(scoreTable[0].testUser).to.eql([105, 1, 1]);
-        expect(scoreTable.options.head).to.eql(['', 'Issue Score', 'closed', 'labeled'])
+        expect(scoreTable.options.head).to.eql(['', 'Issue Score', 'closed', 'labeled']);
       });
     });
 
     describe('sort', function () {
       var A = { testUser1: [ 1000, 62, 3, 3, 0, 2, 1, 0, 0, 0, 0 ] };
-      var B = { testUser2: [ 500, 4, 13, 13, 0, 0, 0, 0, 0, 0, 0 ] }
+      var B = { testUser2: [ 500, 4, 13, 13, 0, 0, 0, 0, 0, 0, 0 ] };
       it('should sort as expected', function () {
         var issueScore = new IssueScore('test/repo');
         var val = issueScore.sortFunc(A, B);
@@ -105,17 +108,16 @@ describe('Issue Score', function () {
       };
       var issueScore = new IssueScore('test/repo');
       var ghRepoStub = sinon.stub(issueScore.github.events, 'getFromRepoIssues').yields(null, issueData);
-      var ghHasNextStub = sinon.stub(issueScore.github, 'hasNextPage')
+      var ghHasNextStub = sinon.stub(issueScore.github, 'hasNextPage');
       ghHasNextStub.onCall(0).returns(true);
       ghHasNextStub.onCall(1).returns(false);
       var ghGetNextPageStub = sinon.stub(issueScore.github, 'getNextPage');
-      // ghGetNextPageStub.onCall(0).yields(null, issueData);
       ghGetNextPageStub.onCall(0).yields(null, singleIssueArray);
 
       issueScore.fetch(function () {
         expect(issueScore.issueEvents).to.eql(issueData.concat(singleIssueArray));
       });
     });
-  })
+  });
 
 });
