@@ -72,6 +72,16 @@ describe('Issue Score', function () {
         expect(scoreTable.options.head).to.eql(['', 'Issue Score', 'closed', 'labeled'])
       });
     });
+
+    describe('sort', function () {
+      var A = { testUser1: [ 1000, 62, 3, 3, 0, 2, 1, 0, 0, 0, 0 ] };
+      var B = { testUser2: [ 500, 4, 13, 13, 0, 0, 0, 0, 0, 0, 0 ] }
+      it('should sort as expected', function () {
+        var issueScore = new IssueScore('test/repo');
+        var val = issueScore.sortFunc(A, B);
+        expect(val).to.be(-500);
+      });
+    });
   });
 
   describe('fetch', function () {
@@ -109,15 +119,3 @@ describe('Issue Score', function () {
   })
 
 });
-
-
-
-[ { actor: { login: 'testUser' }, event: 'closed' },
-  { actor: { login: 'testUser' }, event: 'labeled' },
-  { actor: { login: 'testUser' }, event: 'closed' },
-  { actor: { login: 'testUser' }, event: 'labeled' } ]
-
-
-[ { actor: { login: 'testUser' }, event: 'closed' },
-  { actor: { login: 'testUser' }, event: 'labeled' },
-  { actor: { login: 'testUser2' }, event: 'labeled' } ]

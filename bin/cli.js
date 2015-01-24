@@ -11,7 +11,7 @@ if (argv._.length != 1) {
 try {
   issueScore = new IssueScore(argv._[0]);
   issueScore.fetch(function () {
-    console.log(issueScore.issueEvents);
+    console.log(issueScore.calculate().toString());
   });
 
 } catch (err) {
