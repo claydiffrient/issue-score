@@ -6,6 +6,7 @@
 var IssueScore = require('../lib/issue-score.js');
 var expect = require('expect.js');
 var sinon = require('sinon');
+var rewire = require('rewire');
 
 describe('Issue Score', function () {
 
@@ -20,6 +21,17 @@ describe('Issue Score', function () {
     },
     event: 'labeled'
   }];
+
+  var singleIssueArray = [{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'labeled'
+  }];
+
+  issueData.meta = singleIssueArray.meta = {
+    link: '<https://nextUrl>; rel="next", <https://lastUrl>; rel="last"'
+  };
 
   describe('Constructor', function () {
     it('should throw an error if not given a properly formatted repo', function () {
@@ -58,6 +70,41 @@ describe('Issue Score', function () {
     });
   });
 
+  describe('authenticate', function () {
+    var IssueScoreMock;
+    var configMock;
+    beforeEach(function () {
+      IssueScoreMock = rewire('../lib/issue-score.js');
+      configMock = {
+        has: function () {
+          return true;
+        },
+        get: function () {
+          return 'test';
+        }
+      };
+    });
+
+    it('should use GitHub authentication if the configuration is present', function () {
+      IssueScoreMock.__set__('config', configMock);
+      var issueScore = new IssueScoreMock('testing/special');
+      var githubSpy = sinon.spy(issueScore.github, 'authenticate');
+      issueScore.fetch();
+      expect(githubSpy.called).to.be.ok();
+    });
+
+    it('should not use it if the config is not present', function () {
+      configMock.has = function () {
+        return false;
+      };
+      IssueScoreMock.__set__('config', configMock);
+      var issueScore = new IssueScoreMock('testing/special');
+      var githubSpy = sinon.spy(issueScore.github, 'authenticate');
+      issueScore.fetch();
+      expect(!githubSpy.called).to.be.ok();
+    });
+  });
+
 
   describe('calculate', function () {
     it('should calculate the issue scores given repository data', function () {
@@ -76,6 +123,26 @@ describe('Issue Score', function () {
       });
     });
 
+    it('should handle actor being null', function () {
+      var issueScore = new IssueScore('test/repo');
+      var nullIssueData = [{
+        actor: null,
+          event: 'reopened'
+      }];
+      var fetchStub = sinon.stub(issueScore, 'fetch', function (callback) {
+        this.issueEvents = nullIssueData;
+        callback();
+      });
+
+
+      issueScore.fetch(function () {
+        var scoreTable = issueScore.calculate();
+        expect(scoreTable).to.be.ok();
+        expect(scoreTable[0].null).to.eql([-100, 1]);
+        expect(scoreTable.options.head).to.eql(['', 'Issue Score', 'reopened']);
+      });
+    });
+
     describe('sort', function () {
       var A = { testUser1: [ 1000, 62, 3, 3, 0, 2, 1, 0, 0, 0, 0 ] };
       var B = { testUser2: [ 500, 4, 13, 13, 0, 0, 0, 0, 0, 0, 0 ] };
@@ -91,21 +158,12 @@ describe('Issue Score', function () {
     it('should throw an error if GitHub has issues', function () {
       var issueScore = new IssueScore('test/repo');
       var ghRepoStub = sinon.stub(issueScore.github.events, 'getFromRepoIssues').yields(true, null);
-      expect(function () {
-        issueScore.fetch({}, function (err, data){});
-      }).to.throwError();
+      issueScore.fetch(function (err){
+        expect(err).to.be.ok();
+      });
     });
 
     it('should get issues from github and add them to the data array', function () {
-      var singleIssueArray = [{
-        actor: {
-          login: 'testUser2'
-        },
-        event: 'labeled'
-      }];
-      issueData.meta = singleIssueArray.meta = {
-        link: '<https://nextUrl>; rel="next", <https://lastUrl>; rel="last"'
-      };
       var issueScore = new IssueScore('test/repo');
       var ghRepoStub = sinon.stub(issueScore.github.events, 'getFromRepoIssues').yields(null, issueData);
       var ghHasNextStub = sinon.stub(issueScore.github, 'hasNextPage');
@@ -118,6 +176,17 @@ describe('Issue Score', function () {
         expect(issueScore.issueEvents).to.eql(issueData.concat(singleIssueArray));
       });
     });
+
+    it('should throw an error if problems occur during the whilst loop', function () {
+      var issueScore = new IssueScore('test/repo');
+      var ghRepoStub = sinon.stub(issueScore.github.events, 'getFromRepoIssues').yields(null, issueData);
+      var ghHasNextStub = sinon.stub(issueScore.github, 'hasNextPage').returns(true);
+      var ghGetNextPageStub = sinon.stub(issueScore.github, 'getNextPage').yields(new Error('test'), singleIssueArray);
+      issueScore.fetch(function (err){
+        expect(err).to.be.ok();
+      });
+    });
+
   });
 
 });
