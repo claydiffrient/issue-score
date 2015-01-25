@@ -4,8 +4,8 @@ node_js:
   - "0.10"
 script:
   - "npm run lint"
-  - "npm run coverage"
   - "npm test"
+  - "npm run coverage"
 addons:
   code_climate:
     repo_token: 4485f5a28135d786d91434fd8cc7f4eb6578e6a51a16682cbb8098487ceaaae5
