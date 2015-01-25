@@ -29,6 +29,83 @@ describe('Issue Score', function () {
     event: 'labeled'
   }];
 
+  var allEventTypes = [{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'closed'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'merged'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'reopened'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'subscribed'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'referenced'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'assigned'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'labeled'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'milestoned'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'unassigned'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'unlabeled'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'demilestoned'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'renamed'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'locked'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'mentioned'
+  },{
+    actor: {
+      login: 'testUser2'
+    },
+    event: 'something not handled'
+  }];
+
   issueData.meta = singleIssueArray.meta = {
     link: '<https://nextUrl>; rel="next", <https://lastUrl>; rel="last"'
   };
@@ -120,6 +197,24 @@ describe('Issue Score', function () {
         expect(scoreTable).to.be.ok();
         expect(scoreTable[0].testUser).to.eql([105, 1, 1]);
         expect(scoreTable.options.head).to.eql(['', 'Issue Score', 'closed', 'labeled']);
+      });
+    });
+
+    it('should handle all possible values for the event field', function () {
+      var issueScore = new IssueScore('test/repo');
+      var fetchStub = sinon.stub(issueScore, 'fetch', function (callback) {
+        this.issueEvents = allEventTypes;
+        callback();
+      });
+
+
+      issueScore.fetch(function () {
+        var scoreTable = issueScore.calculate();
+        expect(scoreTable).to.be.ok();
+        expect(scoreTable[0].testUser2).to.eql([138, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+        expect(scoreTable.options.head).to.eql(['', 'Issue Score', 'closed', 'merged', 'reopened',
+          'subscribed', 'referenced', 'assigned', 'labeled', 'milestoned', 'unassigned', 'unlabeled',
+          'demilestoned', 'renamed', 'locked', 'mentioned', 'something not handled']);
       });
     });
 
