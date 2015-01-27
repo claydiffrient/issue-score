@@ -5,6 +5,8 @@ os:
 node_js:
   - "0.11"
   - "0.10"
+install:
+  - "sh ./script/ci_install.sh"
 script:
   - "npm run lint"
   - "npm test"
